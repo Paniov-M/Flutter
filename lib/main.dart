@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:mysql1/mysql1.dart' as mysql;
 
 void main() {
   runApp(MyApp());
@@ -42,28 +41,9 @@ class MyApp extends StatelessWidget {
         print('User Email: ${account.email}');
         showSignInSuccessToast();
 
-        // Підключення до бази даних
-        final settings = mysql.ConnectionSettings(
-          host: '127.0.0.1',
-          port: 3306,
-          user: 'root',
-          db: 'authorization',
-          password: 'your_password',
-        );
+        // Передача інформації про авторизованого користувача в базу даних
+        Authorization(account.id, account.email, account.displayName ?? 'Default Name', 'your_token');
 
-        try {
-          final connection = await mysql.MySqlConnection.connect(settings);
-
-          // Збереження інформації про авторизованого користувача в базу даних
-
-          await connection.query(
-            'INSERT INTO users (user_id, email, name, token) VALUES (?, ?, ?)',
-            [account.id, 'your_email', 'your_token'],
-          );
-          await connection.close();
-        } catch (e) {
-          print('Error connecting to database: $e');
-        }
       } else {
         print('Google Sign In failed!');
       }
@@ -83,4 +63,18 @@ class MyApp extends StatelessWidget {
       fontSize: 16.0,
     );
   }
+
+  void Authorization(String userId, String email, String name, String token) {
+  print('Saving user data to database...');
+
+  // Перевірка, чи електронна пошта закінчується на "nuwm.edu.ua"
+  if (email.endsWith('@nuwm.edu.ua')) 
+  {
+    print('Успішна авторизація!');
+  } 
+  else {
+    print('Неуспішна авторизація. Неправильний домен електронної пошти.');
+  }
+}
+
 }
