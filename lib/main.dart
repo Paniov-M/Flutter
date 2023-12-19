@@ -10,17 +10,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Hello, World!'),
-        ),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () {
-              signInWithGoogle(context);
-            },
-            child: Text('Sign In with Google'),
-          ),
+      title: 'Your App Title',
+      home: HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Hello, World!'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            signInWithGoogle(context);
+          },
+          child: Text('Sign In with Google'),
         ),
       ),
     );
@@ -29,7 +37,7 @@ class MyApp extends StatelessWidget {
   void signInWithGoogle(BuildContext context) async {
     try {
       GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email'],
+        scopes: ['email', 'profile'],
         clientId: '908582655922-dldr6rb6e3hp98fc2n2fh68argtpemac.apps.googleusercontent.com',
       );
       GoogleSignInAccount? account = await googleSignIn.signIn();
@@ -39,11 +47,11 @@ class MyApp extends StatelessWidget {
         print('User ID: ${account.id}');
         print('User Name: ${account.displayName}');
         print('User Email: ${account.email}');
+        print('User Photo URL: ${account.photoUrl}');
         showSignInSuccessToast();
 
         // Передача інформації про авторизованого користувача в базу даних
-        Authorization(account.id, account.email, account.displayName ?? 'Default Name', 'your_token');
-
+        Authorization(account.id, account.email, account.displayName ?? 'Default Name', account.photoUrl ?? '', 'your_token', context);
       } else {
         print('Google Sign In failed!');
       }
@@ -64,17 +72,25 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  void Authorization(String userId, String email, String name, String token) {
-  print('Saving user data to database...');
+  void Authorization(String userId, String email, String name, String photoUrl, String token, BuildContext context) {
+    print('Saving user data to database...');
 
-  // Перевірка, чи електронна пошта закінчується на "nuwm.edu.ua"
-  if (email.endsWith('@nuwm.edu.ua')) 
-  {
-    print('Успішна авторизація!');
-  } 
-  else {
-    print('Неуспішна авторизація. Неправильний домен електронної пошти.');
+    // Перевірка, чи електронна пошта закінчується на "nuwm.edu.ua"
+    if (email.endsWith('@nuwm.edu.ua')) {
+      print('Успішна авторизація!');
+      print('User Photo URL: $photoUrl');
+
+      // Виведення фото на екран
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Image.network(photoUrl),
+          );
+        },
+      );
+    } else {
+      print('Неуспішна авторизація. Неправильний домен електронної пошти.');
+    }
   }
-}
-
 }
